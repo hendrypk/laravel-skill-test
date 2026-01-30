@@ -26,23 +26,4 @@ class Post extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
-
-    public function scopePublished($query)
-    {
-        return $query->where('is_draft', false)
-            ->where('published_at', '<=', now());
-    }
-
-    public function scopeScheduled($query)
-    {
-        return $query->where('is_draft', false)
-            ->where('published_at', '>', now())
-            ->where('user_id', auth()->id());
-    }
-
-    public function scopeDraft($query)
-    {
-        return $query->where('is_draft', true)
-            ->where('user_id', auth()->id());
-    }
 }

@@ -5,26 +5,32 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StorePostRequest;
 use App\Models\Post;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 
 class PostController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        $status = $request->query('status', 'published');
+        $posts = Post::with('author')
+            ->where('is_draft', false)
+            ->where('published_at', '<=', now())
+            ->latest()
+            ->paginate(20);
 
-        $query = Post::with('author');
+        return inertia('posts/index', [
+            'posts' => $posts,
+        ]);
+    }
 
-        $query->when($status, function ($q) use ($status) {
-            return match ($status) {
-                'draft' => $q->draft(),
-                'scheduled' => $q->scheduled(),
-                'deleted' => $q->onlyTrashed(),
-                default => $q->published(),
-            };
-        });
+    public function indexAuthor()
+    {
+        $posts = Post::where('user_id', auth()->id())
+            ->latest()
+            ->withTrashed()
+            ->paginate(20);
 
-        return response()->json($query->latest()->paginate(20));
+        return inertia('posts/author-index', [
+            'posts' => $posts,
+        ]);
     }
 
     public function store(StorePostRequest $request)

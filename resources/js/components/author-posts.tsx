@@ -29,7 +29,6 @@ type PaginatedPosts = {
     links: PaginationLink[];
 };
 
-// Gabungkan ke dalam satu interface yang digunakan di usePage
 interface SharedProps {
     auth: {
         user: User | null;
@@ -37,15 +36,11 @@ interface SharedProps {
     posts: PaginatedPosts;
 }
 
-export default function DashboardPosts() {
-    // 1. Menghilangkan 'any' dengan SharedProps
+export default function AuthorPosts() {
     const { auth, posts } = usePage<SharedProps>().props;
 
-    // 2. Menghapus handlePageChange yang tidak digunakan (unused-vars)
-    // Navigasi dilakukan langsung di dalam onClick button
-
     if (!posts?.data || posts.data.length === 0) {
-        return <div className="p-4 text-zinc-500">Tidak ada postingan publik yang aktif.</div>;
+        return <div className="p-4 text-zinc-500">Tidak ada postingan yang ditemukan.</div>;
     }
 
     return (
@@ -111,17 +106,15 @@ export default function DashboardPosts() {
                 ))}
             </div>
 
-            {/* Pagination Controls */}
             {posts.links && posts.links.length > 3 && (
                 <div className="mt-6 flex flex-wrap gap-2">
                     {posts.links.map((link, i) => (
                         <button
                             key={i}
                             disabled={!link.url || link.active}
-                            // Menggunakan link.url dari Laravel Paginator
                             onClick={() => link.url && router.get(link.url)}
                             className={`rounded px-3 py-1 text-sm transition ${
-                                link.active ? 'bg-zinc-800 text-white' : 'bg-white text-zinc-600 hover:bg-zinc-100'
+                                link.active ? 'bg-zinc-800 text-white dark:bg-zinc-100 dark:text-black' : 'bg-white text-zinc-600 hover:bg-zinc-100'
                             } ${!link.url ? 'cursor-not-allowed opacity-30' : ''}`}
                             dangerouslySetInnerHTML={{ __html: link.label }}
                         />
