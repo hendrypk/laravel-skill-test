@@ -34,14 +34,20 @@ export default function DashboardPosts() {
 
     const [posts, setPosts] = useState<PaginatedPosts | null>(null);
     const [loading, setLoading] = useState(false);
+    const [status, setStatus] = useState('published');
 
-    const fetchPosts = (page: number = 1) => {
+    const fetchPosts = (page: number = 1, currentStatus: string = status) => {
         setLoading(true);
         axios
-            .get<PaginatedPosts>(`/posts/json?page=${page}`)
+            .get<PaginatedPosts>(`/posts/json?page=${page}&status=${currentStatus}`)
             .then((res) => setPosts(res.data))
             .catch((err) => console.error(err))
             .finally(() => setLoading(false));
+    };
+
+    const handleStatusChange = (newStatus: string) => {
+        setStatus(newStatus);
+        fetchPosts(1, newStatus);
     };
 
     useEffect(() => {
@@ -53,14 +59,32 @@ export default function DashboardPosts() {
 
     return (
         <div className="p-4">
-            {auth.user && (
-                <Link
-                    href={route('posts.create')}
-                    className="mb-4 inline-block rounded-lg bg-green-600 px-4 py-2 text-white transition hover:bg-green-700"
-                >
-                    + Buat Post Baru
-                </Link>
-            )}
+            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex w-fit gap-2 rounded-lg bg-zinc-100 p-1 dark:bg-zinc-800">
+                    {['published', 'scheduled', 'draft', 'deleted'].map((s) => (
+                        <button
+                            key={s}
+                            onClick={() => handleStatusChange(s)}
+                            className={`rounded-md px-4 py-1.5 text-sm font-medium capitalize transition ${
+                                status === s
+                                    ? 'bg-white text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-white'
+                                    : 'text-zinc-500 hover:text-zinc-700'
+                            }`}
+                        >
+                            {s}
+                        </button>
+                    ))}
+                </div>
+
+                {auth.user && (
+                    <Link
+                        href={route('posts.create')}
+                        className="inline-block rounded-lg bg-green-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-green-700"
+                    >
+                        + Buat Post Baru
+                    </Link>
+                )}
+            </div>
 
             <div className={loading ? 'opacity-50' : ''}>
                 {posts.data.map((post) => (

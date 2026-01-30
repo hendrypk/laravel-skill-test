@@ -4,11 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Post extends Model
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'user_id',
@@ -18,6 +19,7 @@ class Post extends Model
         'published_at',
         'created_at',
         'updated_at',
+        'deleted_at',
     ];
 
     public function user()
@@ -25,9 +27,22 @@ class Post extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function scopeActive($query)
+    public function scopePublished($query)
     {
         return $query->where('is_draft', false)
             ->where('published_at', '<=', now());
+    }
+
+    public function scopeScheduled($query)
+    {
+        return $query->where('is_draft', false)
+            ->where('published_at', '>', now())
+            ->where('user_id', auth()->id());
+    }
+
+    public function scopeDraft($query)
+    {
+        return $query->where('is_draft', true)
+            ->where('user_id', auth()->id());
     }
 }
