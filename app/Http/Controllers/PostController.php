@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StorePostRequest;
 use App\Models\Post;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 
 class PostController extends Controller
 {
@@ -24,8 +24,27 @@ class PostController extends Controller
         ]);
     }
 
-    public function create()
+    public function store(StorePostRequest $request)
     {
-        return Inertia::render('posts/create');
+        $validated = $request->validated();
+        $isDraft = (bool) $validated['is_draft'];
+        $publishedAt = $validated['published_at'];
+
+        if ($isDraft) {
+            $publishedAt = null;
+        } elseif (empty($publishedAt)) {
+            $publishedAt = now();
+        }
+
+        // dd($publishedAt, $validated);
+        Post::create([
+            'user_id' => auth()->id(),
+            'title' => $validated['title'],
+            'content' => $validated['content'],
+            'is_draft' => $validated['is_draft'],
+            'published_at' => $publishedAt,
+        ]);
+
+        return redirect()->route('posts.index')->with('success', 'Mantap! Post kamu udah berhasil meluncur.');
     }
 }

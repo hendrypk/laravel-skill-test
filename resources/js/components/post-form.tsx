@@ -3,7 +3,6 @@ import { FormEventHandler } from 'react';
 
 export default function PostForm() {
     const { data, setData, post, processing, errors } = useForm({
-        user_id: '',
         title: '',
         content: '',
         is_draft: 0,
@@ -58,13 +57,17 @@ export default function PostForm() {
                         </div>
 
                         <div className={data.is_draft ? 'opacity-50' : ''}>
-                            <label className="mb-1 block text-sm font-medium">Tanggal Publikasi</label>
+                            <label className="mb-1 block text-sm font-medium">
+                                Jadwal Publikasi
+                                <span className="ml-2 text-xs font-normal text-zinc-500">(Kosongkan untuk langsung publish sekarang)</span>
+                            </label>
                             <input
                                 type="datetime-local"
                                 disabled={data.is_draft === 1}
                                 value={data.published_at}
                                 onChange={(e) => setData('published_at', e.target.value)}
                                 className="w-full rounded border p-2 dark:bg-zinc-800"
+                                placeholder="Publish sekarang..."
                             />
                         </div>
                     </div>

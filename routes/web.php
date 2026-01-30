@@ -21,6 +21,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('posts/create', function () {
         return Inertia::render('posts/create');
     })->name('posts.create');
+    Route::post('posts/store', [PostController::class, 'store'])
+        ->name('posts.store');
 });
 
 require __DIR__.'/settings.php';
