@@ -53,8 +53,8 @@ class PostController extends Controller
 
     public function show(Post $post)
     {
-        if ($post->is_draft && $post->user_id !== auth()->id()) {
-            abort(403, 'Post ini masih dalam tahap draf.');
+        if ($post->is_draft || $post->published_at > now() && $post->user_id !== auth()->id()) {
+            abort(404, 'Post ini masih dalam tahap draf.');
         }
 
         $post->load('author');
