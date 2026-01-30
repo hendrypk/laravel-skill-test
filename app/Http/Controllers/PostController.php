@@ -64,6 +64,10 @@ class PostController extends Controller
 
     public function edit(Post $post)
     {
+        if ($post->is_draft || $post->published_at > now() && $post->user_id !== auth()->id()) {
+            abort(404, 'Post ini masih dalam tahap draf.');
+        }
+
         return inertia('posts/edit', [
             'post' => [
                 'id' => $post->id,
@@ -77,8 +81,8 @@ class PostController extends Controller
 
     public function update(StorePostRequest $request, Post $post): RedirectResponse
     {
-        if ($post->user_id !== auth()->id()) {
-            abort(403, 'Waduh, kamu nggak punya akses buat ngedit post ini.');
+        if ($post->is_draft || $post->published_at > now() && $post->user_id !== auth()->id()) {
+            abort(404, 'Waduh, kamu nggak punya akses buat ngedit post ini.');
         }
 
         $validated = $request->validated();
