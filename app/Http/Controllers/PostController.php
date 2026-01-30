@@ -59,4 +59,44 @@ class PostController extends Controller
 
         return inertia('posts/show', ['post' => $post]);
     }
+
+    public function edit(Post $post)
+    {
+        return inertia('posts/edit', [
+            'post' => [
+                'id' => $post->id,
+                'title' => $post->title,
+                'content' => $post->content,
+                'is_draft' => $post->is_draft,
+                'published_at' => $post->published_at,
+            ],
+        ]);
+    }
+
+    public function update(StorePostRequest $request, Post $post)
+    {
+        if ($post->user_id !== auth()->id()) {
+            abort(403, 'Anda tidak memiliki akses untuk mengubah post ini.');
+        }
+
+        $validated = $request->validated();
+        $isDraft = (bool) $validated['is_draft'];
+        $publishedAt = $validated['published_at'];
+
+        if ($isDraft) {
+            $publishedAt = null;
+        } elseif (empty($publishedAt)) {
+            $publishedAt = now();
+        }
+
+        $post->update([
+            'title' => $validated['title'],
+            'content' => $validated['content'],
+            'is_draft' => $validated['is_draft'],
+            'published_at' => $publishedAt,
+        ]);
+
+        return redirect()->route('posts.show', $post->id)
+            ->with('success', 'Gokil! Perubahan post kamu udah tersimpan dengan aman.');
+    }
 }

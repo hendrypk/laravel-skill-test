@@ -3,24 +3,43 @@ import { useForm } from '@inertiajs/react';
 import { LucideCalendar, LucideSave } from 'lucide-react';
 import { FormEventHandler } from 'react';
 
-export default function PostForm() {
-    const { data, setData, post, processing, errors } = useForm({
-        title: '',
-        content: '',
-        is_draft: 0,
-        published_at: '',
+interface Post {
+    id?: number;
+    title: string;
+    content: string;
+    is_draft: number;
+    published_at: string | null;
+}
+
+interface Props {
+    post?: Post;
+}
+
+export default function PostForm({ post: existingPost }: Props) {
+    const { data, setData, post, patch, processing, errors } = useForm({
+        title: existingPost?.title || '',
+        content: existingPost?.content || '',
+        is_draft: existingPost?.is_draft ?? 0,
+        published_at: existingPost?.published_at ? new Date(existingPost.published_at).toISOString().slice(0, 16) : '',
     });
+
+    const isEditing = !!existingPost?.id;
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        post(route('posts.store'));
+        if (isEditing) {
+            patch(route('posts.update', existingPost.id));
+        } else {
+            post(route('posts.store'));
+        }
     };
-
     return (
         <div className="max-w-full px-6 py-8">
             <form onSubmit={submit}>
                 <div className="mb-8 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-                    <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">Create New Post</h1>
+                    <h5 className="text-3xl font-bold tracking-tight text-zinc-700 dark:text-zinc-50">
+                        {isEditing ? 'Edit Post' : 'Create New Post'}
+                    </h5>
 
                     <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-zinc-200 bg-zinc-50/50 p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
                         <div className="flex items-center gap-2 border-r border-zinc-200 pr-4 dark:border-zinc-800">
@@ -59,10 +78,8 @@ export default function PostForm() {
                     </div>
                 </div>
 
-                {/* Main Content Card */}
                 <div className="rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
                     <div className="space-y-6">
-                        {/* Title Input */}
                         <div>
                             <label className="mb-2 block text-xs font-bold tracking-widest text-zinc-400 uppercase">Article Title</label>
                             <input
@@ -78,7 +95,6 @@ export default function PostForm() {
                             {errors.title && <p className="mt-2 text-xs text-red-500">{errors.title}</p>}
                         </div>
 
-                        {/* Content Input */}
                         <div>
                             <label className="mb-2 block text-xs font-bold tracking-widest text-zinc-400 uppercase">Content</label>
                             <textarea

@@ -4,20 +4,14 @@ import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Posts',
-        href: '/posts',
-    },
-    {
-        title: 'Create Post',
-        href: '/posts/create',
-    },
+    { title: 'Posts', href: route('posts.index') },
+    { title: 'Create', href: '#' },
 ];
 
 export default function PostsIndex() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Posts" />
+            <Head title="Create New Post" />
             <PostForm />
         </AppLayout>
     );

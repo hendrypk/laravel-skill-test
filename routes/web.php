@@ -19,10 +19,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('posts/create', function () {
         return Inertia::render('posts/create');
     })->name('posts.create');
-    Route::post('posts/store', [PostController::class, 'store'])
+    Route::post('posts', [PostController::class, 'store'])
         ->name('posts.store');
-    Route::post('posts/edit', [PostController::class, 'edit'])
+    Route::get('posts/edit/{post}', [PostController::class, 'edit'])
         ->name('posts.edit');
+    Route::patch('posts/{post}', [PostController::class, 'update'])
+        ->name('posts.update');
 });
 
 Route::get('posts/{post}', [PostController::class, 'show'])->name('posts.show');
