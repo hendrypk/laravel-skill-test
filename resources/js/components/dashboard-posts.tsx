@@ -29,7 +29,6 @@ type PaginatedPosts = {
     links: PaginationLink[];
 };
 
-// Gabungkan ke dalam satu interface yang digunakan di usePage
 interface SharedProps {
     auth: {
         user: User | null;
@@ -38,11 +37,7 @@ interface SharedProps {
 }
 
 export default function DashboardPosts() {
-    // 1. Menghilangkan 'any' dengan SharedProps
     const { auth, posts } = usePage<SharedProps>().props;
-
-    // 2. Menghapus handlePageChange yang tidak digunakan (unused-vars)
-    // Navigasi dilakukan langsung di dalam onClick button
 
     if (!posts?.data || posts.data.length === 0) {
         return <div className="p-4 text-zinc-500">Tidak ada postingan publik yang aktif.</div>;
@@ -60,65 +55,91 @@ export default function DashboardPosts() {
                     </Link>
                 )}
             </div>
-
             <div className="grid gap-3">
-                {posts.data.map((post) => (
-                    <div key={post.id} className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-                        <div className="flex items-start justify-between">
-                            <div className="flex flex-col gap-1">
-                                <div className="flex items-center gap-2">
-                                    <Link href={route('posts.show', post.id)}>
-                                        <h3 className="text-lg font-bold text-zinc-800 capitalize transition-colors hover:text-indigo-600 dark:text-zinc-100">
-                                            {post.title}
-                                        </h3>
-                                    </Link>
+                {posts.data.map((post) => {
+                    const isDraft = post.is_draft;
+                    const isScheduled = post.published_at && new Date(post.published_at) > new Date();
 
-                                    {auth.user?.id === post.author?.id && (
+                    return (
+                        <div key={post.id} className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                            <div className="flex items-start justify-between">
+                                <div className="flex flex-col gap-1">
+                                    <div className="flex items-center gap-2">
+                                        <Link href={route('posts.show', post.id)}>
+                                            <h3 className="text-lg font-bold text-zinc-800 capitalize transition-colors hover:text-indigo-600 dark:text-zinc-100">
+                                                {post.title}
+                                            </h3>
+                                        </Link>
+
+                                        {/* Status Badge (Hanya muncul jika Draft atau Scheduled) */}
                                         <div className="flex gap-2">
-                                            <span className="rounded bg-indigo-100 px-2 py-0.5 text-[10px] font-bold text-indigo-700 uppercase dark:bg-indigo-900/40">
-                                                Mine
-                                            </span>
-                                            <Link
-                                                href={route('posts.edit', post.id)}
-                                                className="text-[10px] font-bold text-amber-600 hover:underline"
-                                            >
-                                                EDIT
-                                            </Link>
+                                            {isDraft ? (
+                                                <span className="rounded bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700 uppercase dark:bg-amber-900/40 dark:text-amber-400">
+                                                    Draft
+                                                </span>
+                                            ) : isScheduled ? (
+                                                <span className="rounded bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700 uppercase dark:bg-blue-900/40 dark:text-blue-400">
+                                                    Scheduled
+                                                </span>
+                                            ) : null}
                                         </div>
-                                    )}
+                                    </div>
+
+                                    <p className="text-sm text-gray-500">
+                                        By <span className="font-medium text-zinc-700 dark:text-zinc-300">{post.author?.name}</span>
+                                        <span className="mx-2">|</span>
+                                        {post.published_at
+                                            ? new Date(post.published_at).toLocaleDateString('id-ID', {
+                                                  day: 'numeric',
+                                                  month: 'long',
+                                                  year: 'numeric',
+                                              })
+                                            : 'No date'}
+                                    </p>
                                 </div>
 
-                                <p className="text-sm text-gray-500">
-                                    By <span className="font-medium text-zinc-700 dark:text-zinc-300">{post.author?.name}</span>
-                                    <span className="mx-2">|</span>
-                                    {new Date(post.published_at).toLocaleDateString('id-ID', {
-                                        day: 'numeric',
-                                        month: 'long',
-                                        year: 'numeric',
-                                    })}
-                                </p>
-                            </div>
+                                <div className="flex items-center gap-2">
+                                    {auth.user?.id === post.author?.id && (
+                                        <>
+                                            <Link
+                                                href={route('posts.edit', post.id)}
+                                                className="rounded-md bg-amber-50 px-3 py-1 text-sm font-medium text-amber-600 hover:bg-amber-100 dark:bg-amber-900/20 dark:text-amber-400"
+                                            >
+                                                Edit
+                                            </Link>
 
-                            <Link
-                                href={route('posts.show', post.id)}
-                                className="rounded-md bg-zinc-100 px-3 py-1 text-sm font-medium text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400"
-                            >
-                                Show
-                            </Link>
+                                            <Link
+                                                href={route('posts.destroy', post.id)}
+                                                method="delete"
+                                                as="button"
+                                                onBefore={() => confirm('Apakah Anda yakin ingin menghapus postingan ini?')}
+                                                className="rounded-md bg-red-50 px-3 py-1 text-sm font-medium text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400"
+                                            >
+                                                Delete
+                                            </Link>
+                                        </>
+                                    )}
+
+                                    <Link
+                                        href={route('posts.show', post.id)}
+                                        className="rounded-md bg-zinc-100 px-3 py-1 text-sm font-medium text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400"
+                                    >
+                                        Show
+                                    </Link>
+                                </div>
+                            </div>
+                            <p className="mt-2 line-clamp-2 text-zinc-600 dark:text-zinc-400">{post.content}</p>
                         </div>
-                        <p className="mt-2 line-clamp-2 text-zinc-600 dark:text-zinc-400">{post.content}</p>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
 
-            {/* Pagination Controls */}
             {posts.links && posts.links.length > 3 && (
                 <div className="mt-6 flex flex-wrap gap-2">
                     {posts.links.map((link, i) => (
                         <button
                             key={i}
                             disabled={!link.url || link.active}
-                            // Menggunakan link.url dari Laravel Paginator
                             onClick={() => link.url && router.get(link.url)}
                             className={`rounded px-3 py-1 text-sm transition ${
                                 link.active ? 'bg-zinc-800 text-white' : 'bg-white text-zinc-600 hover:bg-zinc-100'

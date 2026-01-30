@@ -3,123 +3,140 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePostRequest;
+use App\Http\Requests\UpdatePostRequest;
 use App\Models\Post;
-use Illuminate\Http\RedirectResponse;
+use Carbon\Carbon;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class PostController extends Controller
 {
-    public function index()
+    use AuthorizesRequests;
+
+    public function index(Request $request)
     {
         $posts = Post::with('author')
-            ->where('is_draft', false)
-            ->where('published_at', '<=', now())
-            ->latest()
-            ->paginate(20);
+            ->where(function ($query) use ($request) {
+                $query->where(function ($q) {
+                    $q->where('is_draft', false)
+                        ->where('published_at', '<=', now());
+                });
 
-        return inertia('posts/index', [
+                if ($request->user()) {
+                    $query->orWhere('user_id', $request->user()->id);
+                }
+            })
+            ->latest('created_at')
+            ->paginate(20)
+            ->withQueryString();
+
+        return Inertia::render('posts/index', [
             'posts' => $posts,
+            'auth' => [
+                'user' => $request->user() ? $request->user()->only(['id', 'name', 'email']) : null,
+            ],
         ]);
     }
 
-    public function indexAuthor()
+    public function create()
     {
-        $posts = Post::where('user_id', auth()->id())
-            ->latest()
-            ->withTrashed()
-            ->paginate(20);
+        $this->authorize('create', Post::class);
 
-        return inertia('posts/author-index', [
-            'posts' => $posts,
-        ]);
+        return Inertia::render('posts/create');
     }
 
     public function store(StorePostRequest $request)
     {
-        $validated = $request->validated();
-        $isDraft = (bool) $validated['is_draft'];
-        $publishedAt = $validated['published_at'];
+        $this->authorize('create', Post::class);
+
+        $data = $request->validated();
+
+        $isDraft = array_key_exists('is_draft', $data) ? (bool) $data['is_draft'] : false;
 
         if ($isDraft) {
-            $publishedAt = null;
-        } elseif (empty($publishedAt)) {
-            $publishedAt = now();
+            $data['is_draft'] = true;
+            $data['published_at'] = null;
+        } else {
+            $data['is_draft'] = false;
+            if (array_key_exists('published_at', $data) && ! empty($data['published_at'])) {
+                $data['published_at'] = \Carbon\Carbon::parse($data['published_at']);
+            } else {
+                $data['published_at'] = now();
+            }
         }
 
-        Post::create([
-            'user_id' => auth()->id(),
-            'title' => $validated['title'],
-            'content' => $validated['content'],
-            'is_draft' => $validated['is_draft'],
-            'published_at' => $publishedAt,
-        ]);
+        $data['user_id'] = auth()->id();
 
-        return redirect()->route('posts.index')->with('success', 'Mantap! Post kamu udah berhasil meluncur.');
+        $post = Post::create($data);
+        $post->load('author');
+
+        return redirect()->route('posts.show', $post)->with('success', 'Post created');
     }
 
     public function show(Post $post)
     {
-        if ($post->is_draft || $post->published_at > now() && $post->user_id !== auth()->id()) {
-            abort(404, 'Post ini masih dalam tahap draf.');
+        $isOwner = auth()->id() === $post->user_id;
+
+        $isPublic = ! $post->is_draft && ($post->published_at && $post->published_at <= now());
+
+        if (! $isOwner && ! $isPublic) {
+            abort(404);
         }
 
         $post->load('author');
+
+        if (request()->wantsJson()) {
+            return response()->json($post);
+        }
 
         return inertia('posts/show', ['post' => $post]);
     }
 
     public function edit(Post $post)
     {
-        if ($post->is_draft || $post->published_at > now() && $post->user_id !== auth()->id()) {
-            abort(404, 'Post ini masih dalam tahap draf.');
-        }
+        $this->authorize('update', $post);
 
-        return inertia('posts/edit', [
-            'post' => [
-                'id' => $post->id,
-                'title' => $post->title,
-                'content' => $post->content,
-                'is_draft' => $post->is_draft,
-                'published_at' => $post->published_at,
-            ],
+        return Inertia::render('posts/edit', [
+            'post' => $post->load('author'),
         ]);
     }
 
-    public function update(StorePostRequest $request, Post $post): RedirectResponse
+    public function update(UpdatePostRequest $request, Post $post)
     {
-        if ($post->is_draft || $post->published_at > now() && $post->user_id !== auth()->id()) {
-            abort(404, 'Waduh, kamu nggak punya akses buat ngedit post ini.');
-        }
+        $this->authorize('update', $post);
 
-        $validated = $request->validated();
-        $isDraft = (bool) $validated['is_draft'];
-        $publishedAt = $validated['published_at'];
+        $data = $request->validated();
+
+        $isDraft = array_key_exists('is_draft', $data) ? (bool) $data['is_draft'] : (bool) $post->is_draft;
 
         if ($isDraft) {
-            $publishedAt = null;
-        } elseif (empty($publishedAt)) {
-            $publishedAt = now();
+            $data['is_draft'] = true;
+            $data['published_at'] = null;
+        } else {
+            $data['is_draft'] = false;
+
+            if (array_key_exists('published_at', $data) && ! empty($data['published_at'])) {
+                $data['published_at'] = Carbon::parse($data['published_at']);
+            } else {
+                $data['published_at'] = now();
+            }
         }
 
-        $post->update([
-            'title' => $validated['title'],
-            'content' => $validated['content'],
-            'is_draft' => $isDraft ? 1 : 0,
-            'published_at' => $publishedAt,
-        ]);
+        $post->update($data);
 
-        return redirect()->route('posts.show', $post->id)
-            ->with('success', 'Gokil! Perubahan post kamu udah tersimpan dengan aman.');
+        return redirect()->route('posts.show', $post)->with('success', 'Post updated');
     }
 
-    public function destroy(Post $post): RedirectResponse
+    public function destroy(Request $request, Post $post)
     {
-        if ($post->user_id !== auth()->id()) {
-            abort(403, 'Eits! Kamu nggak punya izin buat hapus post ini.');
-        }
-
+        $this->authorize('delete', $post);
         $post->delete();
 
-        return redirect()->route('posts.index')
-            ->with('success', 'Beres! Post tadi udah resmi kita hapus dari peredaran.');
+        if ($request->wantsJson()) {
+            return response()->json(null, 204);
+        }
+
+        return redirect()->route('posts.index')->with('success', 'Post deleted');
     }
 }
