@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePostRequest;
 use App\Models\Post;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class PostController extends Controller
@@ -73,10 +74,10 @@ class PostController extends Controller
         ]);
     }
 
-    public function update(StorePostRequest $request, Post $post)
+    public function update(StorePostRequest $request, Post $post): RedirectResponse
     {
         if ($post->user_id !== auth()->id()) {
-            abort(403, 'Anda tidak memiliki akses untuk mengubah post ini.');
+            abort(403, 'Waduh, kamu nggak punya akses buat ngedit post ini.');
         }
 
         $validated = $request->validated();
@@ -92,7 +93,7 @@ class PostController extends Controller
         $post->update([
             'title' => $validated['title'],
             'content' => $validated['content'],
-            'is_draft' => $validated['is_draft'],
+            'is_draft' => $isDraft ? 1 : 0,
             'published_at' => $publishedAt,
         ]);
 
