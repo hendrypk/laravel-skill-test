@@ -1,4 +1,6 @@
+import { Button } from '@/components/ui/button';
 import { useForm } from '@inertiajs/react';
+import { LucideCalendar, LucideSave } from 'lucide-react';
 import { FormEventHandler } from 'react';
 
 export default function PostForm() {
@@ -7,7 +9,6 @@ export default function PostForm() {
         content: '',
         is_draft: 0,
         published_at: '',
-        created_at: '',
     });
 
     const submit: FormEventHandler = (e) => {
@@ -16,73 +17,84 @@ export default function PostForm() {
     };
 
     return (
-        <div className="p-4">
-            <div className="mx-auto max-w-2xl rounded-xl bg-white p-6 shadow dark:bg-zinc-900">
-                <h2 className="mb-4 text-xl font-bold text-zinc-800 dark:text-zinc-200">Buat Post Baru</h2>
+        <div className="max-w-full px-6 py-8">
+            <form onSubmit={submit}>
+                <div className="mb-8 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+                    <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">Create New Post</h1>
 
-                <form onSubmit={submit} className="space-y-4">
-                    <div>
-                        <label className="mb-1 block text-sm font-medium">Judul</label>
-                        <input
-                            type="text"
-                            value={data.title}
-                            onChange={(e) => setData('title', e.target.value)}
-                            className={`w-full rounded-md border p-2 dark:bg-zinc-800 ${errors.title ? 'border-red-500' : 'border-zinc-300'}`}
-                        />
-                        {errors.title && <p className="mt-1 text-xs text-red-500">{errors.title}</p>}
-                    </div>
-
-                    <div>
-                        <label className="mb-1 block text-sm font-medium">Konten</label>
-                        <textarea
-                            value={data.content}
-                            onChange={(e) => setData('content', e.target.value)}
-                            rows={5}
-                            className={`w-full rounded-md border p-2 dark:bg-zinc-800 ${errors.content ? 'border-red-500' : 'border-zinc-300'}`}
-                        ></textarea>
-                        {errors.content && <p className="mt-1 text-xs text-red-500">{errors.content}</p>}
-                    </div>
-                    <div className="flex flex-col gap-4 rounded-lg border bg-zinc-50 p-4 dark:bg-zinc-800/50">
-                        <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-zinc-200 bg-zinc-50/50 p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
+                        <div className="flex items-center gap-2 border-r border-zinc-200 pr-4 dark:border-zinc-800">
                             <input
                                 type="checkbox"
                                 id="is_draft"
                                 checked={data.is_draft === 1}
                                 onChange={(e) => setData('is_draft', e.target.checked ? 1 : 0)}
-                                className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                className="size-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
                             />
-                            <label htmlFor="is_draft" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Simpan sebagai Draft (Tidak akan tayang meskipun tanggal terlewati)
+                            <label
+                                htmlFor="is_draft"
+                                className="cursor-pointer text-sm font-medium whitespace-nowrap text-zinc-700 dark:text-zinc-300"
+                            >
+                                Save as Draft
                             </label>
                         </div>
 
-                        <div className={data.is_draft ? 'opacity-50' : ''}>
-                            <label className="mb-1 block text-sm font-medium">
-                                Jadwal Publikasi
-                                <span className="ml-2 text-xs font-normal text-zinc-500">(Kosongkan untuk langsung publish sekarang)</span>
-                            </label>
+                        <div
+                            className={`flex items-center gap-2 transition-opacity ${data.is_draft === 1 ? 'pointer-events-none opacity-30' : 'opacity-100'}`}
+                        >
+                            <LucideCalendar className="size-4 text-zinc-400" />
                             <input
                                 type="datetime-local"
                                 disabled={data.is_draft === 1}
                                 value={data.published_at}
                                 onChange={(e) => setData('published_at', e.target.value)}
-                                className="w-full rounded border p-2 dark:bg-zinc-800"
-                                placeholder="Publish sekarang..."
+                                className="bg-transparent text-sm outline-none dark:text-zinc-300"
                             />
                         </div>
-                    </div>
 
-                    <div className="flex justify-end">
-                        <button
-                            type="submit"
-                            disabled={processing}
-                            className="rounded-lg bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700 disabled:opacity-50"
-                        >
-                            {processing ? 'Menyimpan...' : 'Simpan Post'}
-                        </button>
+                        <Button type="submit" disabled={processing} size="sm" className="ml-2 shadow-sm shadow-indigo-500/20">
+                            {processing ? 'Saving...' : 'Save'}
+                            {!processing && <LucideSave className="ml-2 size-4" />}
+                        </Button>
                     </div>
-                </form>
-            </div>
+                </div>
+
+                {/* Main Content Card */}
+                <div className="rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                    <div className="space-y-6">
+                        {/* Title Input */}
+                        <div>
+                            <label className="mb-2 block text-xs font-bold tracking-widest text-zinc-400 uppercase">Article Title</label>
+                            <input
+                                type="text"
+                                placeholder="Enter a catchy title..."
+                                value={data.title}
+                                onChange={(e) => setData('title', e.target.value)}
+                                className={`w-full bg-transparent text-2xl font-bold outline-none placeholder:text-zinc-300 dark:text-zinc-50 ${
+                                    errors.title ? 'text-red-500' : ''
+                                }`}
+                            />
+                            <div className={`mt-2 h-px w-full bg-zinc-100 dark:bg-zinc-800 ${errors.title ? 'bg-red-500' : ''}`} />
+                            {errors.title && <p className="mt-2 text-xs text-red-500">{errors.title}</p>}
+                        </div>
+
+                        {/* Content Input */}
+                        <div>
+                            <label className="mb-2 block text-xs font-bold tracking-widest text-zinc-400 uppercase">Content</label>
+                            <textarea
+                                placeholder="Start writing your story..."
+                                value={data.content}
+                                onChange={(e) => setData('content', e.target.value)}
+                                rows={15}
+                                className={`w-full rounded-xl border-none bg-transparent py-2 text-lg transition outline-none placeholder:text-zinc-300 dark:text-zinc-300 ${
+                                    errors.content ? 'ring-1 ring-red-500' : ''
+                                }`}
+                            ></textarea>
+                            {errors.content && <p className="mt-2 text-xs text-red-500">{errors.content}</p>}
+                        </div>
+                    </div>
+                </div>
+            </form>
         </div>
     );
 }

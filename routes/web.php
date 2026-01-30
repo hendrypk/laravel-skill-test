@@ -11,7 +11,6 @@ Route::get('posts/json', [PostController::class, 'index'])->name('posts.json');
 Route::get('posts', function () {
     return Inertia::render('posts/index');
 })->name('posts.index');
-Route::get('posts/{post}', [PostController::class, 'show'])->name('posts.show');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
@@ -25,6 +24,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('posts/edit', [PostController::class, 'edit'])
         ->name('posts.edit');
 });
+
+Route::get('posts/{post}', [PostController::class, 'show'])->name('posts.show');
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
