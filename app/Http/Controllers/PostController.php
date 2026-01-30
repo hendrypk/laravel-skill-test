@@ -24,19 +24,6 @@ class PostController extends Controller
         });
 
         return response()->json($query->latest()->paginate(20));
-
-        // $posts = Post::with('author')
-        //     ->active()
-        //     ->orderBy('published_at', 'desc')
-        //     ->paginate(20);
-
-        // return response()->json([
-        //     'data' => $posts->items(),
-        //     'current_page' => $posts->currentPage(),
-        //     'last_page' => $posts->lastPage(),
-        //     'per_page' => $posts->perPage(),
-        //     'total' => $posts->total(),
-        // ]);
     }
 
     public function store(StorePostRequest $request)
@@ -61,5 +48,16 @@ class PostController extends Controller
         ]);
 
         return redirect()->route('posts.index')->with('success', 'Mantap! Post kamu udah berhasil meluncur.');
+    }
+
+    public function show(Post $post)
+    {
+        if ($post->is_draft && $post->user_id !== auth()->id()) {
+            abort(403, 'Post ini masih dalam tahap draf.');
+        }
+
+        $post->load('author');
+
+        return inertia('posts/show', ['post' => $post]);
     }
 }

@@ -53,7 +53,7 @@ export default function DashboardPosts() {
 
     useEffect(() => {
         fetchPosts();
-    }, []);
+    }, [fetchPosts]);
 
     if (!posts && loading) return <div className="p-4">Loading...</div>;
     if (!posts) return <div className="p-4">Tidak ada data.</div>;
@@ -107,7 +107,7 @@ export default function DashboardPosts() {
 
                                 <div className="flex items-center gap-2">
                                     <p className="text-sm text-gray-500">
-                                        Oleh <span className="font-medium text-zinc-700 dark:text-zinc-300">{post.author?.name || 'Anonymous'}</span>
+                                        By <span className="font-medium text-zinc-700 dark:text-zinc-300">{post.author?.name || 'Anonymous'}</span>
                                         <span className="mx-2">|</span>
                                         {post.published_at
                                             ? new Date(post.published_at).toLocaleDateString('id-ID', {
@@ -128,12 +128,25 @@ export default function DashboardPosts() {
                                 </div>
                             </div>
 
-                            {auth.user && auth.user.id === post.author?.id && (
-                                <div className="flex gap-3">
-                                    <button className="text-sm text-blue-500 hover:underline">Edit</button>
-                                    <button className="text-sm text-red-500 hover:underline">Hapus</button>
-                                </div>
-                            )}
+                            <div className="flex items-center gap-4">
+                                <Link
+                                    href={route('posts.show', post.id)}
+                                    className="text-sm font-medium text-zinc-600 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                                >
+                                    Show
+                                </Link>
+
+                                {auth.user && auth.user.id === post.author?.id && (
+                                    <div className="flex gap-3 border-l border-zinc-200 pl-4 dark:border-zinc-700">
+                                        <Link href={route('posts.edit', post.id)} className="text-sm font-medium text-blue-500 hover:text-blue-600">
+                                            Edit
+                                        </Link>
+                                        <button onClick={() => deletePost(post.id)} className="text-sm font-medium text-red-500 hover:text-red-600">
+                                            Delete
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                         <p className="mt-2 leading-relaxed text-zinc-600 dark:text-zinc-400">{post.content}</p>
                     </div>
