@@ -1,4 +1,4 @@
-import { usePage } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 
@@ -54,7 +54,12 @@ export default function DashboardPosts() {
     return (
         <div className="p-4">
             {auth.user && (
-                <button className="mb-4 rounded-lg bg-green-600 px-4 py-2 text-white transition hover:bg-green-700">+ Buat Post Baru</button>
+                <Link
+                    href={route('posts.create')}
+                    className="mb-4 inline-block rounded-lg bg-green-600 px-4 py-2 text-white transition hover:bg-green-700"
+                >
+                    + Buat Post Baru
+                </Link>
             )}
 
             <div className={loading ? 'opacity-50' : ''}>

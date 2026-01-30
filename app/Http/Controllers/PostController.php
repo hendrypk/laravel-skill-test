@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Post;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class PostController extends Controller
 {
@@ -21,5 +22,10 @@ class PostController extends Controller
             'per_page' => $posts->perPage(),
             'total' => $posts->total(),
         ]);
+    }
+
+    public function create()
+    {
+        return Inertia::render('posts/create');
     }
 }

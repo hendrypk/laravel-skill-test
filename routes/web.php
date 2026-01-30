@@ -18,6 +18,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
+    Route::get('posts/create', function () {
+        return Inertia::render('posts/create');
+    })->name('posts.create');
 });
 
 require __DIR__.'/settings.php';
