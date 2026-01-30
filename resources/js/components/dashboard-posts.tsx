@@ -1,4 +1,4 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -57,6 +57,19 @@ export default function DashboardPosts() {
     useEffect(() => {
         fetchPosts();
     }, []);
+
+    const restorePost = (id: number) => {
+        if (confirm('Balikin post ini lagi?')) {
+            router.post(
+                route('posts.restore', id),
+                {},
+                {
+                    preserveScroll: true,
+                    onSuccess: () => {},
+                },
+            );
+        }
+    };
 
     if (!posts && loading) return <div className="p-4">Loading...</div>;
     if (!posts) return <div className="p-4">Tidak ada data.</div>;
@@ -143,14 +156,22 @@ export default function DashboardPosts() {
                                     </div>
                                 </div>
                             </div>
-
                             <div className="flex items-center gap-4">
-                                <Link
-                                    href={route('posts.show', post.id)}
-                                    className="text-sm font-medium text-zinc-600 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-                                >
-                                    Show
-                                </Link>
+                                {post.deleted_at ? (
+                                    <button
+                                        onClick={() => restorePost(post.id)}
+                                        className="text-sm font-medium text-emerald-600 transition hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
+                                    >
+                                        Restore
+                                    </button>
+                                ) : (
+                                    <Link
+                                        href={route('posts.show', post.id)}
+                                        className="text-sm font-medium text-zinc-600 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                                    >
+                                        Show
+                                    </Link>
+                                )}
                             </div>
                         </div>
                         <p className="mt-2 leading-relaxed text-zinc-600 dark:text-zinc-400">{post.content}</p>

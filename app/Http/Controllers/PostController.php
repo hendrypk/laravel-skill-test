@@ -6,6 +6,7 @@ use App\Http\Requests\StorePostRequest;
 use App\Models\Post;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class PostController extends Controller
 {
@@ -99,5 +100,30 @@ class PostController extends Controller
 
         return redirect()->route('posts.show', $post->id)
             ->with('success', 'Gokil! Perubahan post kamu udah tersimpan dengan aman.');
+    }
+
+    public function destroy(Post $post): RedirectResponse
+    {
+        if ($post->user_id !== auth()->id()) {
+            abort(403, 'Eits! Kamu nggak punya izin buat hapus post ini.');
+        }
+
+        $post->delete();
+
+        return redirect()->route('posts.index')
+            ->with('success', 'Beres! Post tadi udah resmi kita hapus dari peredaran.');
+    }
+
+    public function restore($id)
+    {
+        $post = Post::withTrashed()->findOrFail($id);
+
+        if ($post->user_id !== auth()->id()) {
+            abort(403, 'Eits! Kamu nggak punya izin buat hapus post ini.');
+        }
+
+        $post->restore();
+
+        return Inertia::location(route('posts.index'));
     }
 }

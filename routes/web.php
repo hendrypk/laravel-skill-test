@@ -25,6 +25,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('posts.edit');
     Route::patch('posts/{post}', [PostController::class, 'update'])
         ->name('posts.update');
+    Route::delete('/posts/{post}', [PostController::class, 'destroy'])
+        ->name('posts.destroy');
+    Route::post('posts/{id}/restore', [PostController::class, 'restore'])
+        ->name('posts.restore')
+        ->withTrashed();
 });
 
 Route::get('posts/{post}', [PostController::class, 'show'])->name('posts.show');
