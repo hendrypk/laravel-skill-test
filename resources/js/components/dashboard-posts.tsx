@@ -12,6 +12,7 @@ type Post = {
     title: string;
     content: string;
     published_at: string;
+    is_draft: boolean;
     author: User;
 };
 
@@ -93,11 +94,38 @@ export default function DashboardPosts() {
                         className="mb-3 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
                     >
                         <div className="flex items-start justify-between">
-                            <div>
-                                <h3 className="text-lg font-bold text-zinc-800 dark:text-zinc-100">{post.title}</h3>
-                                <p className="text-sm text-gray-500">
-                                    Oleh {post.author?.name || 'Sistem'} | {new Date(post.published_at).toLocaleDateString()}
-                                </p>
+                            <div className="flex flex-col gap-1">
+                                <div className="flex items-center gap-2">
+                                    <h3 className="text-lg font-bold text-zinc-800 dark:text-zinc-100">{post.title}</h3>
+
+                                    {status === 'deleted' && (
+                                        <span className="rounded bg-red-100 px-2 py-0.5 text-[10px] font-bold tracking-wider text-red-700 uppercase dark:bg-red-900/40 dark:text-red-400">
+                                            Deleted
+                                        </span>
+                                    )}
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                    <p className="text-sm text-gray-500">
+                                        Oleh <span className="font-medium text-zinc-700 dark:text-zinc-300">{post.author?.name || 'Anonymous'}</span>
+                                        <span className="mx-2">|</span>
+                                        {post.published_at
+                                            ? new Date(post.published_at).toLocaleDateString('id-ID', {
+                                                  day: 'numeric',
+                                                  month: 'long',
+                                                  year: 'numeric',
+                                              })
+                                            : 'Belum dipublikasikan'}
+                                    </p>
+
+                                    {/* Badge Status Tambahan */}
+                                    <div className="flex gap-1">
+                                        {post.is_draft === 1 && <span className="text-[10px] font-medium text-amber-600 italic">• Draft</span>}
+                                        {post.is_draft === 0 && new Date(post.published_at || '') > new Date() && (
+                                            <span className="text-[10px] font-medium text-blue-600 italic">• Scheduled</span>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
 
                             {auth.user && auth.user.id === post.author?.id && (

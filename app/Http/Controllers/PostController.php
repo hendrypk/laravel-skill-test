@@ -12,7 +12,7 @@ class PostController extends Controller
     {
         $status = $request->query('status', 'published');
 
-        $query = Post::with('user');
+        $query = Post::with('author');
 
         $query->when($status, function ($q) use ($status) {
             return match ($status) {
@@ -25,7 +25,7 @@ class PostController extends Controller
 
         return response()->json($query->latest()->paginate(20));
 
-        // $posts = Post::with('user')
+        // $posts = Post::with('author')
         //     ->active()
         //     ->orderBy('published_at', 'desc')
         //     ->paginate(20);
