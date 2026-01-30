@@ -38,7 +38,6 @@ class PostController extends Controller
             $publishedAt = now();
         }
 
-        // dd($publishedAt, $validated);
         Post::create([
             'user_id' => auth()->id(),
             'title' => $validated['title'],

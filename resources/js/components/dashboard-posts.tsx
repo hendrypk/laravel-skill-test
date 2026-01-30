@@ -1,6 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
 import axios from 'axios';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 type User = {
     id: number;
@@ -37,14 +37,17 @@ export default function DashboardPosts() {
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState('published');
 
-    const fetchPosts = (page: number = 1, currentStatus: string = status) => {
-        setLoading(true);
-        axios
-            .get<PaginatedPosts>(`/posts/json?page=${page}&status=${currentStatus}`)
-            .then((res) => setPosts(res.data))
-            .catch((err) => console.error(err))
-            .finally(() => setLoading(false));
-    };
+    const fetchPosts = useCallback(
+        (page: number = 1, currentStatus: string = status) => {
+            setLoading(true);
+            axios
+                .get<PaginatedPosts>(`/posts/json?page=${page}&status=${currentStatus}`)
+                .then((res) => setPosts(res.data))
+                .catch((err) => console.error(err))
+                .finally(() => setLoading(false));
+        },
+        [status],
+    );
 
     const handleStatusChange = (newStatus: string) => {
         setStatus(newStatus);
@@ -53,7 +56,7 @@ export default function DashboardPosts() {
 
     useEffect(() => {
         fetchPosts();
-    }, [fetchPosts]);
+    }, []);
 
     if (!posts && loading) return <div className="p-4">Loading...</div>;
     if (!posts) return <div className="p-4">Tidak ada data.</div>;
@@ -82,7 +85,7 @@ export default function DashboardPosts() {
                         href={route('posts.create')}
                         className="inline-block rounded-lg bg-green-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-green-700"
                     >
-                        + Buat Post Baru
+                        New Post
                     </Link>
                 )}
             </div>
@@ -96,7 +99,21 @@ export default function DashboardPosts() {
                         <div className="flex items-start justify-between">
                             <div className="flex flex-col gap-1">
                                 <div className="flex items-center gap-2">
-                                    <h3 className="text-lg font-bold text-zinc-800 dark:text-zinc-100">{post.title}</h3>
+                                    <div className="flex flex-col gap-1">
+                                        <div className="flex items-center gap-2">
+                                            <Link href={route('posts.show', post.id)}>
+                                                <h3 className="cursor-pointer text-lg font-bold text-zinc-800 capitalize transition-colors hover:text-indigo-600 dark:text-zinc-100 dark:hover:text-indigo-400">
+                                                    {post.title}
+                                                </h3>
+                                            </Link>
+
+                                            {auth.user?.id === post.author?.id && (
+                                                <span className="rounded bg-indigo-100 px-2 py-0.5 text-[10px] font-bold tracking-wider text-indigo-700 uppercase dark:bg-indigo-900/40 dark:text-indigo-400">
+                                                    Mine
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
 
                                     {status === 'deleted' && (
                                         <span className="rounded bg-red-100 px-2 py-0.5 text-[10px] font-bold tracking-wider text-red-700 uppercase dark:bg-red-900/40 dark:text-red-400">
@@ -118,7 +135,6 @@ export default function DashboardPosts() {
                                             : 'Belum dipublikasikan'}
                                     </p>
 
-                                    {/* Badge Status Tambahan */}
                                     <div className="flex gap-1">
                                         {post.is_draft === 1 && <span className="text-[10px] font-medium text-amber-600 italic">• Draft</span>}
                                         {post.is_draft === 0 && new Date(post.published_at || '') > new Date() && (
@@ -135,17 +151,6 @@ export default function DashboardPosts() {
                                 >
                                     Show
                                 </Link>
-
-                                {auth.user && auth.user.id === post.author?.id && (
-                                    <div className="flex gap-3 border-l border-zinc-200 pl-4 dark:border-zinc-700">
-                                        <Link href={route('posts.edit', post.id)} className="text-sm font-medium text-blue-500 hover:text-blue-600">
-                                            Edit
-                                        </Link>
-                                        <button onClick={() => deletePost(post.id)} className="text-sm font-medium text-red-500 hover:text-red-600">
-                                            Delete
-                                        </button>
-                                    </div>
-                                )}
                             </div>
                         </div>
                         <p className="mt-2 leading-relaxed text-zinc-600 dark:text-zinc-400">{post.content}</p>

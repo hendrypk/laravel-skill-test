@@ -1,4 +1,6 @@
+import { Button } from '@/components/ui/button';
 import { Head, Link, router, usePage } from '@inertiajs/react';
+import { LucideArrowLeft, LucidePencil, LucideTrash2 } from 'lucide-react';
 
 export default function PostShow({ post }: Props) {
     const { auth } = usePage().props;
@@ -18,9 +20,7 @@ export default function PostShow({ post }: Props) {
                     href="/posts"
                     className="mb-10 inline-flex items-center text-sm text-zinc-500 transition hover:text-zinc-900 dark:hover:text-zinc-100"
                 >
-                    <svg className="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
+                    <LucideArrowLeft className="me-2 size-3.5"></LucideArrowLeft>
                     Back
                 </Link>
 
@@ -37,18 +37,22 @@ export default function PostShow({ post }: Props) {
 
                             {auth.user?.id === post.author?.id && (
                                 <div className="flex items-center gap-4">
-                                    <Link href={route('posts.edit', post.id)} className="font-medium text-indigo-600 hover:text-indigo-700">
-                                        Edit
-                                    </Link>
-                                    <button onClick={handleDelete} className="font-medium text-red-600 hover:text-red-700">
+                                    <Button variant="outline" size="sm" asChild>
+                                        <Link href={route('posts.edit', post.id)}>
+                                            <LucidePencil className="size-3.5" />
+                                            Edit
+                                        </Link>
+                                    </Button>
+
+                                    <Button variant="destructive" size="sm" onClick={handleDelete}>
+                                        <LucideTrash2 className="size-3.5" />
                                         Delete
-                                    </button>
+                                    </Button>
                                 </div>
                             )}
                         </div>
                     </header>
 
-                    {/* Konten Utama */}
                     <div className="prose prose-zinc dark:prose-invert max-w-none border-t border-zinc-100 pt-8 dark:border-zinc-800">
                         <p className="text-lg leading-relaxed whitespace-pre-wrap text-zinc-700 dark:text-zinc-300">{post.content}</p>
                     </div>
