@@ -1,4 +1,4 @@
-import { Link, router, usePage } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -35,41 +35,19 @@ export default function DashboardPosts() {
 
     const [posts, setPosts] = useState<PaginatedPosts | null>(null);
     const [loading, setLoading] = useState(false);
-    const [status, setStatus] = useState('published');
 
-    const fetchPosts = useCallback(
-        (page: number = 1, currentStatus: string = status) => {
-            setLoading(true);
-            axios
-                .get<PaginatedPosts>(`/posts/json?page=${page}&status=${currentStatus}`)
-                .then((res) => setPosts(res.data))
-                .catch((err) => console.error(err))
-                .finally(() => setLoading(false));
-        },
-        [status],
-    );
-
-    const handleStatusChange = (newStatus: string) => {
-        setStatus(newStatus);
-        fetchPosts(1, newStatus);
-    };
+    const fetchPosts = useCallback((page: number = 1) => {
+        setLoading(true);
+        axios
+            .get<PaginatedPosts>(`/posts/json?page=${page}`)
+            .then((res) => setPosts(res.data))
+            .catch((err) => console.error(err))
+            .finally(() => setLoading(false));
+    });
 
     useEffect(() => {
         fetchPosts();
     }, []);
-
-    const restorePost = (id: number) => {
-        if (confirm('Balikin post ini lagi?')) {
-            router.post(
-                route('posts.restore', id),
-                {},
-                {
-                    preserveScroll: true,
-                    onSuccess: () => {},
-                },
-            );
-        }
-    };
 
     if (!posts && loading) return <div className="p-4">Loading...</div>;
     if (!posts) return <div className="p-4">Tidak ada data.</div>;
@@ -77,22 +55,6 @@ export default function DashboardPosts() {
     return (
         <div className="p-4">
             <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex w-fit gap-2 rounded-lg bg-zinc-100 p-1 dark:bg-zinc-800">
-                    {['published', 'scheduled', 'draft', 'deleted'].map((s) => (
-                        <button
-                            key={s}
-                            onClick={() => handleStatusChange(s)}
-                            className={`rounded-md px-4 py-1.5 text-sm font-medium capitalize transition ${
-                                status === s
-                                    ? 'bg-white text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-white'
-                                    : 'text-zinc-500 hover:text-zinc-700'
-                            }`}
-                        >
-                            {s}
-                        </button>
-                    ))}
-                </div>
-
                 {auth.user && (
                     <Link
                         href={route('posts.create')}
@@ -157,21 +119,12 @@ export default function DashboardPosts() {
                                 </div>
                             </div>
                             <div className="flex items-center gap-4">
-                                {post.deleted_at ? (
-                                    <button
-                                        onClick={() => restorePost(post.id)}
-                                        className="text-sm font-medium text-emerald-600 transition hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
-                                    >
-                                        Restore
-                                    </button>
-                                ) : (
-                                    <Link
-                                        href={route('posts.show', post.id)}
-                                        className="text-sm font-medium text-zinc-600 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-                                    >
-                                        Show
-                                    </Link>
-                                )}
+                                <Link
+                                    href={route('posts.show', post.id)}
+                                    className="text-sm font-medium text-zinc-600 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                                >
+                                    Show
+                                </Link>
                             </div>
                         </div>
                         <p className="mt-2 leading-relaxed text-zinc-600 dark:text-zinc-400">{post.content}</p>
