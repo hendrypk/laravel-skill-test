@@ -46,10 +46,10 @@ class PostController extends Controller
         $data = $request->validated();
         $data['user_id'] = Auth::id();
 
-        if (! $data['is_draft'] && empty($data['published_at'])) {
-            $data['published_at'] = now();
-        } elseif ($data['is_draft']) {
+        if ($data['is_draft']) {
             $data['published_at'] = null;
+        } else {
+            $data['published_at'] = $data['published_at'] ?? now();
         }
 
         $post = Post::create($data);

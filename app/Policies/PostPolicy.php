@@ -32,7 +32,7 @@ class PostPolicy
      */
     public function create(User $user): bool
     {
-        return (bool) $user;
+        return true;
     }
 
     /**
