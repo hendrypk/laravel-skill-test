@@ -22,6 +22,11 @@ class Post extends Model
         'deleted_at',
     ];
 
+    protected $casts = [
+        'is_draft' => 'boolean',
+        'published_at' => 'datetime',
+    ];
+
     public function author()
     {
         return $this->belongsTo(User::class, 'user_id');

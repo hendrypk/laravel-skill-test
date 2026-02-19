@@ -44,27 +44,18 @@ class PostController extends Controller
         $this->authorize('create', Post::class);
 
         $data = $request->validated();
-
-        $isDraft = array_key_exists('is_draft', $data) ? (bool) $data['is_draft'] : false;
-
-        if ($isDraft) {
-            $data['is_draft'] = true;
-            $data['published_at'] = null;
-        } else {
-            $data['is_draft'] = false;
-            if (array_key_exists('published_at', $data) && ! empty($data['published_at'])) {
-                $data['published_at'] = \Carbon\Carbon::parse($data['published_at']);
-            } else {
-                $data['published_at'] = now();
-            }
-        }
-
         $data['user_id'] = Auth::id();
+
+        if (! $data['is_draft'] && empty($data['published_at'])) {
+            $data['published_at'] = now();
+        } elseif ($data['is_draft']) {
+            $data['published_at'] = null;
+        }
 
         $post = Post::create($data);
         $post->load('author');
 
-        return redirect()->route('posts.show', $post)->with('success', 'Post created');
+        return redirect()->route('posts.show', $post->id)->with('success', 'Post created');
     }
 
     public function show($id)

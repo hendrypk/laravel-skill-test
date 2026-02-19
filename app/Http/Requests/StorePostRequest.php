@@ -15,6 +15,13 @@ class StorePostRequest extends FormRequest
         return Auth::check();
     }
 
+    protected function prepareForValidation()
+    {
+        $this->merge([
+            'is_draft' => filter_var($this->is_draft, FILTER_VALIDATE_BOOLEAN),
+        ]);
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *
