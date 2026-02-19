@@ -7,13 +7,12 @@ use Inertia\Inertia;
 Route::get('/', function () {
     return Inertia::render('welcome');
 })->name('home');
-Route::get('posts', [PostController::class, 'index'])->name('posts.index');
 
 Route::middleware('auth')->group(function () {
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
-
+    Route::get('posts', [PostController::class, 'index'])->name('posts.index');
     Route::get('posts/{id}', [PostController::class, 'show'])->name('posts.show');
     Route::get('posts/create', [PostController::class, 'create'])->name('posts.create');
     Route::post('posts', [PostController::class, 'store'])->name('posts.store');

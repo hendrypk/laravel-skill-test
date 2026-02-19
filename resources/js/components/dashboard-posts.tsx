@@ -34,6 +34,7 @@ interface SharedProps {
     auth: {
         user: User | null;
     };
+    [key: string]: unknown;
 }
 
 export default function DashboardPosts() {

@@ -22,6 +22,7 @@ interface SharedProps {
             name: string;
         } | null;
     };
+    [key: string]: unknown;
 }
 
 interface Props {

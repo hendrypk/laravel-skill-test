@@ -8,6 +8,7 @@ use App\Models\Post;
 use Carbon\Carbon;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class PostController extends Controller
@@ -58,7 +59,7 @@ class PostController extends Controller
             }
         }
 
-        $data['user_id'] = auth()->id();
+        $data['user_id'] = Auth::id();
 
         $post = Post::create($data);
         $post->load('author');
