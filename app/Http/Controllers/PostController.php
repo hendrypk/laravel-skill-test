@@ -17,7 +17,16 @@ class PostController extends Controller
 
     public function index()
     {
-        return Inertia::render('posts/index');
+        $posts = Post::with('author')
+            ->where('is_draft', false)
+            ->where('published_at', '<=', now())
+            ->latest()
+            ->paginate(20)
+            ->withQueryString();
+
+        return Inertia::render('Posts/Index', [
+            'posts' => $posts,
+        ]);
     }
 
     public function getPostsApi()
@@ -36,7 +45,7 @@ class PostController extends Controller
     {
         $this->authorize('create', Post::class);
 
-        return Inertia::render('posts/create');
+        return 'posts.create';
     }
 
     public function store(StorePostRequest $request)
@@ -84,9 +93,7 @@ class PostController extends Controller
     {
         $this->authorize('update', $post);
 
-        return Inertia::render('posts/edit', [
-            'post' => $post->load('author'),
-        ]);
+        return 'posts.edit';
     }
 
     public function update(UpdatePostRequest $request, Post $post)
