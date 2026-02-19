@@ -3,5 +3,5 @@
 use App\Http\Controllers\PostController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/posts/json', [PostController::class, 'index'])
-    ->name('posts.json');
+Route::get('/api/posts', [PostController::class, 'getPostsApi'])->name('api.posts.index');
+Route::get('/api/posts/{id}', [PostController::class, 'getPostDetailApi'])->name('api.posts.detail');

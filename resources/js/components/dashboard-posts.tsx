@@ -1,4 +1,5 @@
-import { Link, router, usePage } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
 
 type User = {
     id: number;
@@ -26,23 +27,42 @@ type PaginatedPosts = {
     last_page: number;
     per_page: number;
     total: number;
-    links: PaginationLink[];
+    links?: PaginationLink[];
 };
 
 interface SharedProps {
     auth: {
         user: User | null;
     };
-    posts: PaginatedPosts;
 }
 
 export default function DashboardPosts() {
-    const { auth, posts } = usePage<SharedProps>().props;
+    const { auth } = usePage<SharedProps>().props;
+    const [posts, setPosts] = useState<PaginatedPosts | null>(null);
+    const [loading, setLoading] = useState(true);
+    const fetchPosts = async (url = '/api/posts') => {
+        setLoading(true);
+        try {
+            const response = await fetch(url);
+
+            const json: PaginatedPosts = await response.json();
+            setPosts(json);
+        } catch (error) {
+            console.error('Gagal mengambil posts:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchPosts();
+    }, []);
+
+    if (loading) return <div className="p-4">Memuat postingan...</div>;
 
     if (!posts?.data || posts.data.length === 0) {
         return <div className="p-4 text-zinc-500">Tidak ada postingan publik yang aktif.</div>;
     }
-
     return (
         <div className="p-4">
             <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -71,7 +91,6 @@ export default function DashboardPosts() {
                                             </h3>
                                         </Link>
 
-                                        {/* Status Badge (Hanya muncul jika Draft atau Scheduled) */}
                                         <div className="flex gap-2">
                                             {isDraft ? (
                                                 <span className="rounded bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700 uppercase dark:bg-amber-900/40 dark:text-amber-400">
@@ -140,7 +159,7 @@ export default function DashboardPosts() {
                         <button
                             key={i}
                             disabled={!link.url || link.active}
-                            onClick={() => link.url && router.get(link.url)}
+                            onClick={() => link.url && fetchPosts(link.url)}
                             className={`rounded px-3 py-1 text-sm transition ${
                                 link.active ? 'bg-zinc-800 text-white' : 'bg-white text-zinc-600 hover:bg-zinc-100'
                             } ${!link.url ? 'cursor-not-allowed opacity-30' : ''}`}

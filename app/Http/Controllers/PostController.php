@@ -14,29 +14,21 @@ class PostController extends Controller
 {
     use AuthorizesRequests;
 
-    public function index(Request $request)
+    public function index()
+    {
+        return Inertia::render('posts/index');
+    }
+
+    public function getPostsApi()
     {
         $posts = Post::with('author')
-            ->where(function ($query) use ($request) {
-                $query->where(function ($q) {
-                    $q->where('is_draft', false)
-                        ->where('published_at', '<=', now());
-                });
+            ->where('is_draft', false)
+            ->whereNotNull('published_at')
+            ->where('published_at', '<=', now())
+            ->latest()
+            ->paginate(20);
 
-                if ($request->user()) {
-                    $query->orWhere('user_id', $request->user()->id);
-                }
-            })
-            ->latest('created_at')
-            ->paginate(20)
-            ->withQueryString();
-
-        return Inertia::render('posts/index', [
-            'posts' => $posts,
-            'auth' => [
-                'user' => $request->user() ? $request->user()->only(['id', 'name', 'email']) : null,
-            ],
-        ]);
+        return response()->json($posts);
     }
 
     public function create()
@@ -74,23 +66,26 @@ class PostController extends Controller
         return redirect()->route('posts.show', $post)->with('success', 'Post created');
     }
 
-    public function show(Post $post)
+    public function show($id)
     {
-        $isOwner = auth()->id() === $post->user_id;
+        return Inertia::render('posts/show', [
+            'id' => $id,
+        ]);
+    }
 
-        $isPublic = ! $post->is_draft && ($post->published_at && $post->published_at <= now());
+    public function getPostDetailApi($id)
+    {
+        $post = Post::with('author')
+            ->where('is_draft', false)
+            ->whereNotNull('published_at')
+            ->where('published_at', '<=', now())
+            ->find($id);
 
-        if (! $isOwner && ! $isPublic) {
-            abort(404);
+        if (! $post) {
+            return response()->json(['message' => 'Post not found'], 404);
         }
 
-        $post->load('author');
-
-        if (request()->wantsJson()) {
-            return response()->json($post);
-        }
-
-        return inertia('posts/show', ['post' => $post]);
+        return response()->json($post);
     }
 
     public function edit(Post $post)
