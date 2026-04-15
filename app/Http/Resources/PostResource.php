@@ -18,11 +18,14 @@ class PostResource extends JsonResource
             'id' => $this->id,
             'title' => $this->title,
             'content' => $this->content,
-            'is_draft' => (bool) $this->is_draft,
-            'published_at' => $this->published_at?->format('Y-m-d H:i:s'),
+            'is_draft' => $this->is_draft,
+            'published_at' => $this->published_at?->toIso8601String(),
+            'created_at' => $this->created_at?->toIso8601String(),
+            'updated_at' => $this->updated_at?->toIso8601String(),
             'user' => [
                 'id' => $this->user->id,
                 'name' => $this->user->name,
+                'email' => $this->user->email,
             ],
         ];
     }

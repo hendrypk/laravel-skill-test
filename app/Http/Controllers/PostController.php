@@ -24,8 +24,16 @@ class PostController extends Controller
             ->paginate(20);
 
         return Inertia::render('posts/index', [
-            'posts' => PostResource::collection($posts)->additional([
-            ]),
+            'posts' => [
+                'data' => PostResource::collection($posts)->resolve(),
+                'meta' => [
+                    'current_page' => $posts->currentPage(),
+                    'total' => $posts->total(),
+                    'per_page' => $posts->perPage(),
+                    'last_page' => $posts->lastPage(),
+                    'links' => $posts->getUrlRange(1, $posts->lastPage()),
+                ],
+            ],
         ]);
     }
 
@@ -51,9 +59,10 @@ class PostController extends Controller
 
         $post = auth()->user()->posts()->create($validated);
 
-        return (new PostResource($post))
-            ->response()
-            ->setStatusCode(201);
+        return response()->json(
+            new PostResource($post),
+            Response::HTTP_CREATED
+        );
     }
 
     /**
@@ -61,13 +70,16 @@ class PostController extends Controller
      */
     public function show(Post $post)
     {
+        // Return 404 if post is draft or scheduled
         if (! $post->isPublished()) {
             abort(404);
         }
 
         $post->load('user');
 
-        return new PostResource($post);
+        return response()->json([
+            'data' => new PostResource($post),
+        ]);
     }
 
     /**
@@ -96,7 +108,8 @@ class PostController extends Controller
 
         $post->update($validated);
 
-        return (new PostResource($post->load('user')))->additional([
+        return response()->json([
+            'data' => new PostResource($post->load('user')),
             'message' => 'Post updated successfully',
         ]);
     }
@@ -106,10 +119,13 @@ class PostController extends Controller
      */
     public function destroy(Post $post)
     {
-        $this->authorize('delete', $post);
+        $this->authorize('update', $post); // Only author can delete
 
         $post->delete();
 
-        return response()->json(null, Response::HTTP_NO_CONTENT);
+        return response()->json(
+            ['message' => 'Post deleted successfully'],
+            Response::HTTP_NO_CONTENT
+        );
     }
 }
